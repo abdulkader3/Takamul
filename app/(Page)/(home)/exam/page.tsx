@@ -324,35 +324,35 @@ export default function Exam() {
         <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
       </div>
       <header className="flex-shrink-0 border-b border-slate-100 shadow-sm bg-white">
-          <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto">
-            <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
-              <span className="material-symbols-outlined text-3xl">refresh</span>
+          <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto max-sm:px-2 max-sm:py-2">
+            <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed max-sm:p-1">
+              <span className="material-symbols-outlined text-3xl max-sm:text-xl">refresh</span>
             </button>
-            <div className={`font-bold text-xl tracking-tight ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
+            <div className={`font-bold text-xl tracking-tight max-sm:text-base ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
               {formatTime(timeLeft)}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-sm:gap-1">
               {isLastQuestion ? (
                 <button 
                   onClick={handleFinalSubmit}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002915'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#001f0b'}
-                  className="h-9 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md active:scale-[0.98] transition-all mt-10"
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00ba28'}
+                  className="h-9 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md active:scale-[0.98] transition-all mt-10 max-sm:mt-0 max-sm:h-8 max-sm:px-2 max-sm:text-xs"
                   style={{ backgroundColor: '#00ba28', color: '#ffffff' }}
                 >
-                  <span className="material-symbols-outlined text-lg">send</span>
-                  সমাপ্তি করুন
+                  <span className="material-symbols-outlined text-lg max-sm:text-base">send</span>
+                  <span className="max-sm:hidden">সমাপ্তি করুন</span>
                 </button>
               ) : (
-                <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+                <h1 className="text-tertiary-container font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
               {isLastQuestion && (
-                <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+                <h1 className="text-tertiary-container font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
             </div>
           </div>
         </header>
-      <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col overflow-hidden">
+      <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col overflow-hidden max-sm:px-3 max-sm:py-3">
         {isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
@@ -364,16 +364,16 @@ export default function Exam() {
           </div>
         ) : (
           <>
-            <section className="mb-4 text-center md:text-left flex-shrink-0">
-              <h2 className="text-3xl font-bold max-w-6xl">
+            <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-3">
+              <h2 className="text-3xl font-bold max-w-6xl max-sm:text-lg">
                 {currentQuestion.question}
               </h2>
             </section>
-            <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-3" role="radiogroup">
+            <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 sm:gap-3" role="radiogroup">
               {currentQuestion.options.map((option, index) => (
                 <label 
                   key={index} 
-                  className={`group relative flex items-center p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                  className={`group relative flex items-center p-2 sm:p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
                   style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
                 >
                   <input 
@@ -384,15 +384,15 @@ export default function Exam() {
                     checked={selectedAnswer === index}
                     onChange={() => handleOptionChange(index)}
                   />
-                  <div className="flex items-center gap-3 w-full">
+                  <div className="flex items-center gap-2 sm:gap-3 w-full">
                     <div 
-                      className={`flex-shrink-0 w-11 h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-md text-headline-md text-on-surface-variant transition-colors`}
+                      className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors`}
                       style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
                     >
                       {optionLabels[index]}
                     </div>
                     <div className="flex items-center gap-2 flex-1">
-                      <span className={`font-body-lg text-body-lg text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
+                      <span className={`font-body-md sm:font-body-lg text-sm sm:text-body-lg text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
                     </div>
                   </div>
                 </label>
