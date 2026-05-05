@@ -209,6 +209,23 @@ export default function Exam() {
     saveToLocalStorage(newResults, currentQuestionIndex, true);
   };
 
+  const handleFinalSubmit = () => {
+    const newResult: Result = {
+      questionId: currentQuestion.id,
+      selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
+      isCorrect: selectedAnswer === currentQuestion.correctAnswerIndex
+    };
+    const newResults = [...results];
+    newResults[currentQuestionIndex] = newResult;
+    setResults(newResults);
+    
+    const endTime = Date.now();
+    setExamEndTime(endTime);
+    setTimerStarted(false);
+    setIsExamComplete(true);
+    saveToLocalStorage(newResults, currentQuestionIndex, true);
+  };
+
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       // Save current answer before going back
@@ -279,16 +296,23 @@ export default function Exam() {
             <div className="w-9"></div>
           </div>
         </header>
-        <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col items-center justify-center">
+        <main className="flex-1 w-full  mx-auto px-6 py-4 flex flex-col items-center justify-center">
           <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
             <span className="material-symbols-outlined text-6xl">assignment</span>
           </div>
           <h2 className="text-2xl font-bold text-tertiary mb-4">লোডার ও আনলোডার ট্রেড টেস্ট</h2>
-          <p className="text-lg text-on-surface-variant mb-8">মোট ১০টি প্রশ্ন</p>
-          <button onClick={startExam} className="w-full max-w-[320px] h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]">
-            পরীকা শুরু করুন
+          <p className="text-lg text-on-surface-variant mb-8">মোট 15 টি প্রশ্ন</p>
+
+          <div className="flex w-full justify-between mt-10 ">
+            <button className="flex w-40 bg-red-600 justify-center items-center rounded-full text-white font-black">
+             বাতিল করুন
             <span className="material-symbols-outlined text-xl">arrow_forward</span>
           </button>
+          <button onClick={startExam} className="w-60 px-6 py-2  h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]">
+            নিশ্চিত করুন
+            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+          </button>
+          </div>
         </main>
       </div>
     );
@@ -300,16 +324,34 @@ export default function Exam() {
         <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
       </div>
       <header className="flex-shrink-0 border-b border-slate-100 shadow-sm bg-white">
-        <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto">
-          <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
-            <span className="material-symbols-outlined text-3xl">refresh</span>
-          </button>
-          <div className={`font-bold text-xl tracking-tight ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
-            {formatTime(timeLeft)}
+          <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto">
+            <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
+              <span className="material-symbols-outlined text-3xl">refresh</span>
+            </button>
+            <div className={`font-bold text-xl tracking-tight ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
+              {formatTime(timeLeft)}
+            </div>
+            <div className="flex items-center gap-2">
+              {isLastQuestion ? (
+                <button 
+                  onClick={handleFinalSubmit}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002915'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#001f0b'}
+                  className="h-9 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md active:scale-[0.98] transition-all mt-10"
+                  style={{ backgroundColor: '#00ba28', color: '#ffffff' }}
+                >
+                  <span className="material-symbols-outlined text-lg">send</span>
+                  সমাপ্তি করুন
+                </button>
+              ) : (
+                <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+              )}
+              {isLastQuestion && (
+                <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+              )}
+            </div>
           </div>
-          <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
-        </div>
-      </header>
+        </header>
       <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col overflow-hidden">
         {isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -318,10 +360,7 @@ export default function Exam() {
             </div>
             <h2 className="text-2xl font-bold text-tertiary mb-4">পরীক্ষা সম্পন্ন!</h2>
             <p className="text-lg text-on-surface-variant mb-8">আপনি সফলভাবে পরীক্ষা শেষ করেছেন</p>
-            <button onClick={handleViewResults} className="w-full max-w-[320px] h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]">
-              ফলাফল দেখুন
-              <span className="material-symbols-outlined text-xl">visibility</span>
-            </button>
+            
           </div>
         ) : (
           <>
@@ -332,7 +371,11 @@ export default function Exam() {
             </section>
             <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-3" role="radiogroup">
               {currentQuestion.options.map((option, index) => (
-                <label key={index} className={`group relative flex items-center p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-low transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? 'bg-tertiary-fixed border-4 border-tertiary' : ''}`}>
+                <label 
+                  key={index} 
+                  className={`group relative flex items-center p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                  style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
+                >
                   <input 
                     className="peer sr-only" 
                     name="answer" 
@@ -342,7 +385,10 @@ export default function Exam() {
                     onChange={() => handleOptionChange(index)}
                   />
                   <div className="flex items-center gap-3 w-full">
-                    <div className={`flex-shrink-0 w-11 h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-md text-headline-md text-on-surface-variant transition-colors ${selectedAnswer === index ? 'bg-surface-container-lowest text-tertiary' : ''}`}>
+                    <div 
+                      className={`flex-shrink-0 w-11 h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-md text-headline-md text-on-surface-variant transition-colors`}
+                      style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
+                    >
                       {optionLabels[index]}
                     </div>
                     <div className="flex items-center gap-2 flex-1">
@@ -351,21 +397,39 @@ export default function Exam() {
                   </div>
                 </label>
               ))}
-            </section>
-            <section className="mt-4 pt-2 flex-shrink-0 flex gap-3">
+</section>
+
+            {!isLastQuestion && (
+            <section className="mt-4 pt-2 flex-shrink-0 flex justify-end gap-2">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
-                className={`flex-1 h-14 font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all focus:outline-none focus:ring-4 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
+                className={`h-10 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
               >
-                <span className="material-symbols-outlined text-xl">arrow_back</span>
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
                 পিছিয়ে যান
               </button>
-              <button onClick={handleNext} className="flex-1 h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
-                {isLastQuestion ? "জমা দিন" : "এগিয়ে যান"}
-                <span className="material-symbols-outlined text-xl">{isLastQuestion ? "send" : "arrow_forward"}</span>
+              <button onClick={handleNext} className="h-10 px-6 bg-tertiary text-on-tertiary font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-tertiary-fixed">
+                এগিয়ে যান
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </button>
             </section>
+            )}
+
+            {isLastQuestion && (
+            <section className="mt-4 pt-2 flex-shrink-0 flex justify-end">
+              <button 
+                onClick={handlePrevious} 
+                disabled={currentQuestionIndex === 0}
+                className={`h-10 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                পিছিয়ে যান
+              </button>
+            </section>
+            )}
+
+
           </>
         )}
       </main>
