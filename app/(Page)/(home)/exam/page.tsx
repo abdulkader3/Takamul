@@ -21,10 +21,48 @@ export default function Exam() {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [examStarted, setExamStarted] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Timer states
+  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [showTimeUpModal, setShowTimeUpModal] = useState(false);
+  const [examStartTime, setExamStartTime] = useState<number | null>(null);
+  const [examEndTime, setExamEndTime] = useState<number | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = currentQuestionIndex > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
+
+  // Timer formatting function
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (timerStarted && timeLeft > 0 && !isExamComplete) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev - 1;
+          // Save to localStorage periodically
+          const savedData = JSON.parse(localStorage.getItem("exam_progress") || "{}");
+          localStorage.setItem("exam_progress", JSON.stringify({
+            ...savedData,
+            timeLeft: newTime,
+            timerStarted: true
+          }));
+          return newTime;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+    
+    if (timeLeft === 0 && !isExamComplete && timerStarted) {
+      setShowTimeUpModal(true);
+    }
+  }, [timerStarted, timeLeft, isExamComplete]);
 
   useEffect(() => {
     const savedData = localStorage.getItem("exam_progress");
@@ -37,6 +75,19 @@ export default function Exam() {
           setExamStarted(true);
           if (parsed.isExamComplete) {
             setIsExamComplete(true);
+          }
+          // Restore timer state
+          if (parsed.timeLeft !== undefined) {
+            setTimeLeft(parsed.timeLeft);
+          }
+          if (parsed.timerStarted) {
+            setTimerStarted(true);
+          }
+          if (parsed.examStartTime) {
+            setExamStartTime(parsed.examStartTime);
+          }
+          if (parsed.examEndTime) {
+            setExamEndTime(parsed.examEndTime);
           }
           // Set selected answer to the saved answer for current question
           const savedResult = parsed.results[parsed.currentQuestionIndex];
@@ -64,15 +115,37 @@ export default function Exam() {
     setSelectedAnswer(null);
     setExamStarted(true);
     setIsExamComplete(false);
+    // Initialize timer
+    setTimeLeft(1800); // 30 minutes
+    setTimerStarted(true);
+    const startTime = Date.now();
+    setExamStartTime(startTime);
+    setExamEndTime(null);
+    // Save to localStorage
+    localStorage.setItem("exam_progress", JSON.stringify({
+      results: emptyResults,
+      currentQuestionIndex: 0,
+      isExamComplete: false,
+      timeLeft: 1800,
+      timerStarted: true,
+      examStartTime: startTime
+    }));
   };
 
   const saveToLocalStorage = (newResults: Result[], newIndex: number, complete: boolean) => {
-    localStorage.setItem("exam_progress", JSON.stringify({
+    const storageData: Record<string, unknown> = {
       results: newResults,
       currentQuestionIndex: newIndex,
       isExamComplete: complete,
-      savedAt: new Date().toISOString()
-    }));
+      savedAt: new Date().toISOString(),
+      timeLeft,
+      timerStarted,
+      examStartTime
+    };
+    if (complete && examEndTime) {
+      storageData.examEndTime = examEndTime;
+    }
+    localStorage.setItem("exam_progress", JSON.stringify(storageData));
   };
 
   const handleStartOver = () => {
@@ -84,6 +157,10 @@ export default function Exam() {
       setIsExamComplete(false);
       setExamStarted(false);
       setShowResultsModal(false);
+      setTimeLeft(1800);
+      setTimerStarted(false);
+      setExamStartTime(null);
+      setExamEndTime(null);
     }
   };
 
@@ -94,39 +171,63 @@ export default function Exam() {
       isCorrect: selectedAnswer === currentQuestion.correctAnswerIndex
     };
     
-    // Replace result for current question index to avoid duplicates
     const newResults = [...results];
     newResults[currentQuestionIndex] = newResult;
     setResults(newResults);
-    saveToLocalStorage(newResults, currentQuestionIndex, isLastQuestion);
-    setShowConfirmModal(true);
+    
+    if (isLastQuestion) {
+      const endTime = Date.now();
+      setExamEndTime(endTime);
+      setTimerStarted(false);
+      setIsExamComplete(true);
+      saveToLocalStorage(newResults, currentQuestionIndex, true);
+    } else {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      const nextResult = newResults[currentQuestionIndex + 1];
+      setSelectedAnswer(nextResult && nextResult.selectedAnswerIndex >= 0 ? nextResult.selectedAnswerIndex : null);
+      saveToLocalStorage(newResults, currentQuestionIndex + 1, false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleTimeUp = () => {
+    // Save current answer
     const newResult: Result = {
       questionId: currentQuestion.id,
       selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
       isCorrect: selectedAnswer === currentQuestion.correctAnswerIndex
     };
-    
-    // Replace result for current question index to avoid duplicates
     const newResults = [...results];
     newResults[currentQuestionIndex] = newResult;
     setResults(newResults);
-    setShowConfirmModal(false);
     
-    if (isLastQuestion) {
-      setIsExamComplete(true);
-      saveToLocalStorage(newResults, currentQuestionIndex, true);
-    } else {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      saveToLocalStorage(newResults, currentQuestionIndex + 1, false);
-    }
+    // End exam
+    const endTime = Date.now();
+    setExamEndTime(endTime);
+    setTimerStarted(false);
+    setIsExamComplete(true);
+    setShowTimeUpModal(false);
+    saveToLocalStorage(newResults, currentQuestionIndex, true);
   };
 
-  const handleGoBack = () => {
-    setShowConfirmModal(false);
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      // Save current answer before going back
+      const newResult: Result = {
+        questionId: currentQuestion.id,
+        selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
+        isCorrect: selectedAnswer === currentQuestion.correctAnswerIndex
+      };
+      const newResults = [...results];
+      newResults[currentQuestionIndex] = newResult;
+      setResults(newResults);
+      
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      // Restore selected answer for the previous question
+      const prevResult = newResults[prevIndex];
+      setSelectedAnswer(prevResult && prevResult.selectedAnswerIndex >= 0 ? prevResult.selectedAnswerIndex : null);
+      saveToLocalStorage(newResults, prevIndex, false);
+    }
   };
 
   const handleOptionChange = (index: number) => {
@@ -203,8 +304,10 @@ export default function Exam() {
           <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
             <span className="material-symbols-outlined text-3xl">refresh</span>
           </button>
+          <div className={`font-bold text-xl tracking-tight ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
+            {formatTime(timeLeft)}
+          </div>
           <h1 className="text-tertiary-container font-bold text-xl tracking-tight">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
-          <div className="w-9"></div>
         </div>
       </header>
       <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col overflow-hidden">
@@ -249,9 +352,17 @@ export default function Exam() {
                 </label>
               ))}
             </section>
-            <section className="mt-4 pt-2 flex-shrink-0">
-              <button onClick={handleNext} className="w-full h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
-                {isLastQuestion ? "Submit" : "Next"}
+            <section className="mt-4 pt-2 flex-shrink-0 flex gap-3">
+              <button 
+                onClick={handlePrevious} 
+                disabled={currentQuestionIndex === 0}
+                className={`flex-1 h-14 font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all focus:outline-none focus:ring-4 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
+              >
+                <span className="material-symbols-outlined text-xl">arrow_back</span>
+                পিছিয়ে যান
+              </button>
+              <button onClick={handleNext} className="flex-1 h-14 bg-tertiary hover:bg-tertiary-container text-on-tertiary font-button text-button rounded-full flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-tertiary-fixed">
+                {isLastQuestion ? "জমা দিন" : "এগিয়ে যান"}
                 <span className="material-symbols-outlined text-xl">{isLastQuestion ? "send" : "arrow_forward"}</span>
               </button>
             </section>
@@ -259,27 +370,22 @@ export default function Exam() {
         )}
       </main>
 
-      {showConfirmModal && (
+      {showTimeUpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md"></div>
           <div className="relative w-full max-w-[400px] bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_-8px_rgba(0,0,0,0.15)] border border-outline-variant flex flex-col items-center text-center overflow-hidden p-8">
-            <div className="absolute top-0 left-0 w-full h-2 bg-tertiary"></div>
-            <div className="bg-tertiary-fixed w-40 h-40 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mt-4">
-              <span className="material-symbols-outlined text-[80px]">help_outline</span>
+            <div className="absolute top-0 left-0 w-full h-2 bg-error"></div>
+            <div className="bg-error-container w-40 h-40 rounded-full flex items-center justify-center text-on-error-container shadow-sm mt-4">
+              <span className="material-symbols-outlined text-[80px]">timer_off</span>
             </div>
-            <h1 className="font-bold text-2xl text-tertiary max-w-[320px] mt-6">
-              {isLastQuestion ? "আপনি কি পরীক্ষা শেষ করতে চান?" : "পরবর্তী প্রশ্নে যেতে চান?"}
+            <h1 className="font-bold text-2xl text-error max-w-[320px] mt-6">
+              সময় শেষ!
             </h1>
-            <div className="w-full max-w-[320px] flex flex-col gap-3 mt-8">
-              <button onClick={handleSubmit} className="w-full min-h-[72px] bg-tertiary text-on-tertiary font-button text-button rounded-lg flex items-center justify-center gap-2 shadow-[0_4px_12px_-4px_rgba(0,31,11,0.4)] hover:bg-[#001407] active:border-4 active:border-tertiary active:shadow-none transition-all duration-150">
-                <span className="material-symbols-outlined text-[28px]">send</span>
-                {isLastQuestion ? "হ্যাঁ, জমা দিন" : "হ্যাঁ, পরবর্তী"}
-              </button>
-              <button onClick={handleGoBack} className="w-full min-h-[72px] bg-transparent border-[3px] border-tertiary text-tertiary font-button text-button rounded-lg flex items-center justify-center gap-2 hover:bg-surface-variant active:bg-surface-container-high transition-colors duration-150">
-                <span className="material-symbols-outlined text-[28px]">arrow_back</span>
-                না, ফিরে যান
-              </button>
-            </div>
+            <p className="text-on-surface-variant mt-2 mb-6">আপনার পরীক্ষার সময় শেষ হয়ে গেছে।</p>
+            <button onClick={handleTimeUp} className="w-full max-w-[320px] min-h-[72px] bg-tertiary text-on-tertiary font-button text-button rounded-lg flex items-center justify-center gap-2 shadow-[0_4px_12px_-4px_rgba(0,31,11,0.4)] hover:bg-[#001407] active:border-4 active:border-tertiary active:shadow-none transition-all duration-150">
+              ফলাফল দেখুন
+              <span className="material-symbols-outlined text-[28px]">visibility</span>
+            </button>
           </div>
         </div>
       )}
