@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { questions, totalQuestions } from "./data";
+import { MdDoneOutline } from "react-icons/md";
+import { GiCancel } from "react-icons/gi";
 
 const optionLabels = ["A", "B", "C", "D"];
 
@@ -620,18 +622,20 @@ export default function Exam() {
               <button 
                 type="button"
                 onClick={() => setConfirmStep(0)}
-                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
               >
                 বাতিল করুন
+                <GiCancel />
               </button>
               <button 
                 type="button"
                 onClick={() => setConfirmStep(2)}
-                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
+                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
               >
                 নিশ্চিত করুন
+                <MdDoneOutline />
               </button>
             </div>
           </div>
@@ -652,10 +656,11 @@ export default function Exam() {
               <button 
                 type="button"
                 onClick={() => setConfirmStep(0)}
-                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
               >
                 বাতিল করুন
+                <GiCancel />
               </button>
               <button 
                 type="button"
@@ -663,10 +668,11 @@ export default function Exam() {
                   e.preventDefault();
                   handleFinalSubmit();
                 }}
-                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
+                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
               >
                 নিশ্চিত করুন
+                <MdDoneOutline />
               </button>
             </div>
           </div>
