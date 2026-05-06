@@ -430,7 +430,7 @@ export default function Exam() {
            <>
               <div className="max-w-4xl mx-auto w-full flex flex-col pb-24  ">
                 {currentQuestion.type === "image_mcq" && currentQuestion.imagePath && (
-                  <section className="mb-4 flex-shrink-0 flex justify-center">
+                  <section className="mb-60 mt-10 flex-shrink-0 flex justify-center">
                     <img 
                       src={currentQuestion.imagePath} 
                       alt={currentQuestion.imageAlt || currentQuestion.question}
