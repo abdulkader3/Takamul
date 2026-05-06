@@ -7,6 +7,17 @@ import { GiCancel } from "react-icons/gi";
 
 const optionLabels = ["A", "B", "C", "D"];
 
+interface Question {
+  id: number;
+  type: string;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  correctAnswer: string;
+  imagePath?: string;
+  imageAlt?: string;
+}
+
 interface Result {
   questionId: number;
   selectedAnswerIndex: number;
@@ -20,6 +31,7 @@ export default function Exam() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [results, setResults] = useState<Result[]>([]);
   const [isExamComplete, setIsExamComplete] = useState(false);
+  const [showReviewBeforeSubmit, setShowReviewBeforeSubmit] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [examStarted, setExamStarted] = useState(false);
@@ -158,6 +170,7 @@ export default function Exam() {
       setCurrentQuestionIndex(0);
       setSelectedAnswer(null);
       setIsExamComplete(false);
+      setShowReviewBeforeSubmit(false);
       setExamStarted(false);
       setShowResultsModal(false);
       setTimeLeft(1800);
@@ -179,11 +192,8 @@ export default function Exam() {
     setResults(newResults);
     
     if (isLastQuestion) {
-      const endTime = Date.now();
-      setExamEndTime(endTime);
-      setTimerStarted(false);
-      setIsExamComplete(true);
-      saveToLocalStorage(newResults, currentQuestionIndex, true);
+      setShowReviewBeforeSubmit(true);
+      saveToLocalStorage(newResults, currentQuestionIndex, false);
     } else {
       setCurrentQuestionIndex((prev) => prev + 1);
       const nextResult = newResults[currentQuestionIndex + 1];
@@ -223,6 +233,7 @@ export default function Exam() {
     
     // First close the modal by resetting confirmStep
     setConfirmStep(0);
+    setShowReviewBeforeSubmit(false);
     setResults(newResults);
     
     // Then complete the exam
@@ -343,7 +354,7 @@ export default function Exam() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <aside className="fixed left-0 top-16 bottom-0 w-20 hidden md:flex flex-col items-center py-4 bg-surface-container-lowest shadow-lg z-10">
         <div className="text-sm font-semibold text-on-surface-variant mb-4">Questions</div>
         <div className="flex flex-col gap-2 w-full px-3 h-full">
@@ -373,9 +384,9 @@ export default function Exam() {
           })}
         </div>
       </aside>
-      <div className="flex-1 flex flex-col ml-0 md:ml-20">
+      <div className="flex flex-col ml-0 md:ml-20">
         <div className="w-full h-[16px] bg-surface-container-highest flex-shrink-0">
-          <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
+          <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete || showReviewBeforeSubmit ? 100 : progress}%` }}></div>
         </div>
         <header className="flex-shrink-0 border-b border-slate-100 shadow-sm" style={{ backgroundColor: '#075E54' }}>
           <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto max-sm:px-2 max-sm:py-2">
@@ -386,7 +397,7 @@ export default function Exam() {
               {formatTime(timeLeft)}
             </div>
             <div className="flex items-center gap-2 max-sm:gap-1">
-              {isLastQuestion ? (
+              {(isLastQuestion || showReviewBeforeSubmit) ? (
                 <button 
                   onClick={() => setConfirmStep(1)}
                   className="h-16 px-8 font-button text-xl rounded-2xl flex items-center justify-center shadow-md active:scale-[0.98] transition-all mt-10 max-sm:mt-0 max-sm:h-12 max-sm:px-4 max-sm:text-lg"
@@ -397,61 +408,89 @@ export default function Exam() {
               ) : (
                 <h1 className="text-white font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
-              {isLastQuestion && (
+              {(isLastQuestion || showReviewBeforeSubmit) && (
                 <h1 className="text-white font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
             </div>
           </div>
         </header>
-      <main className="w-full mx-auto px-6 py-4 flex overflow-auto max-sm:px-3 max-sm:py-3 h-full">
-        <div className="flex-1 flex flex-col overflow-hidden">
-        {isExamComplete ? (
+      <main className="w-full mx-auto px-6 py-4 overflow-auto max-sm:px-3 max-sm:py-3">
+        <div className="flex flex-col">
+        {showReviewBeforeSubmit ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center bg-white">
+            <h2 className="text-5xl font-bold text-black mb-4"></h2>
+            <p className="text-3xl text-[#075E54] mb-8"></p>
+          </div>
+        ) : isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            {/* <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
-              <span className="material-symbols-outlined text-6xl">check_circle</span>
-            </div> */}
             <h2 className="text-8xl font-bold text-black mb-4">আপনার পরীক্ষা সম্পন্ন হয়েছে</h2>
             <p className="text-9xl text-[#005832] mb-8">ধন্যবাদ</p>
-            
           </div>
 ) : (
-          <>
-            <div className="max-w-3xl mx-auto w-full flex flex-col min-h-0 pb-24">
-              <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-2">
-                <h2 className="text-xl md:text-2xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-semibold">
-                  {currentQuestion.question}
-                </h2>
-              </section>
-<section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 md:gap-3 lg:gap-3" role="radiogroup">
-                {currentQuestion.options.map((option, index) => (
-                  <label 
-                    key={index} 
-                    className={`group relative flex items-center p-2 md:p-3 lg:p-3 xl:p-4 2xl:p-5 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
-                    style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
-                  >
-                    <input 
-                      className="peer sr-only" 
-                      name="answer" 
-                      type="radio" 
-                      value={index}
-                      checked={selectedAnswer === index}
-                      onChange={() => handleOptionChange(index)}
+           <>
+              <div className="max-w-3xl mx-auto w-full flex flex-col pb-24">
+                {currentQuestion.type === "image_mcq" && currentQuestion.imagePath && (
+                  <section className="mb-4 flex-shrink-0 flex justify-center">
+                    <img 
+                      src={currentQuestion.imagePath} 
+                      alt={currentQuestion.imageAlt || currentQuestion.question}
+                      className="max-w-full max-h-48 md:max-h-64 object-contain rounded-lg shadow-md"
                     />
-                    <div className="flex items-center gap-2 md:gap-3 lg:gap-3 xl:gap-4 w-full">
-                      <div 
-                        className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14 rounded-full bg-surface-container flex items-center justify-center text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl font-medium text-on-surface-variant transition-colors"
-                        style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
+                  </section>
+                )}
+                <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-2">
+                  <h2 className="text-xl md:text-2xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-semibold">
+                    {currentQuestion.question}
+                  </h2>
+                </section>
+                <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 md:gap-3 lg:gap-3" role="radiogroup">
+                  {currentQuestion.options.map((option, index) => {
+                    const getOptionLabel = () => {
+                      if (currentQuestion.type === "yes_no" || currentQuestion.type === "true_false") {
+                        return option;
+                      }
+                      return optionLabels[index] || "";
+                    };
+                    
+                    return (
+                      <label 
+                        key={index} 
+                        className={`group relative flex items-center p-2 md:p-3 lg:p-3 xl:p-4 2xl:p-5 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                        style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
                       >
-                        {optionLabels[index]}
-                      </div>
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className={`text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </section>
-            </div>
+                        <input 
+                          className="peer sr-only" 
+                          name="answer" 
+                          type="radio" 
+                          value={index}
+                          checked={selectedAnswer === index}
+                          onChange={() => handleOptionChange(index)}
+                        />
+                        <div className="flex items-center gap-2 md:gap-3 lg:gap-3 xl:gap-4 w-full">
+                          {(currentQuestion.type === "yes_no" || currentQuestion.type === "true_false") ? (
+                            <div 
+                              className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 lg:w-14 lg:h-14 xl:w-16 xl:h-16 2xl:w-18 2xl:h-18 rounded-full bg-surface-container flex items-center justify-center text-lg md:text-xl lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-on-surface-variant transition-colors"
+                              style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
+                            >
+                              {index + 1}
+                            </div>
+                          ) : (
+                            <div 
+                              className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14 rounded-full bg-surface-container flex items-center justify-center text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl font-medium text-on-surface-variant transition-colors"
+                              style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
+                            >
+                              {optionLabels[index]}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className={`text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </section>
+              </div>
 
             <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-transparent border-t border-gray-200">
               <button 
@@ -463,21 +502,11 @@ export default function Exam() {
                 <span className="hidden md:inline">পিছিয়ে যান</span>
               </button>
               
-              {!isLastQuestion ? (
-                <button onClick={handleNext} className="h-12 md:h-14 px-6 md:px-8 text-white font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]" style={{ backgroundColor: '#25D366' }}>
-                  <span className="hidden md:inline">এগিয়ে যান</span>
-                  <span className="md:hidden">Next</span>
-                  <span className="material-symbols-outlined text-lg md:text-xl">arrow_forward</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setConfirmStep(1)}
-                  className="h-12 md:h-14 px-6 md:px-8 text-white font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
-                  style={{ backgroundColor: '#DC2626' }}
-                >
-                  সমাপ্তি করুন
-                </button>
-              )}
+              <button onClick={handleNext} className="h-12 md:h-14 px-6 md:px-8 text-white font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]" style={{ backgroundColor: '#25D366' }}>
+                <span className="hidden md:inline">এগিয়ে যান</span>
+                <span className="md:hidden">Next</span>
+                <span className="material-symbols-outlined text-lg md:text-xl">arrow_forward</span>
+              </button>
             </section>
 
             <div className="md:hidden mt-4 pt-2 flex-shrink-0">
@@ -592,8 +621,8 @@ export default function Exam() {
                       <div className="mt-2 p-3 bg-surface-container-low rounded-lg text-sm">
                         <p className="font-medium mb-2">{question.question}</p>
                         <div className="space-y-1 text-on-surface-variant">
-                          <p>আপনার উত্তর: <span className={result.isCorrect ? 'text-tertiary font-medium' : 'text-error font-medium'}>{question.options[result.selectedAnswerIndex] || "উত্তর দেননি"}</span></p>
-                          {!result.isCorrect && (
+                          <p>আপনার উত্তর: <span className={result.isCorrect ? 'text-tertiary font-medium' : 'text-error font-medium'}>{question.options[result.selectedAnswerIndex] !== undefined ? question.options[result.selectedAnswerIndex] : "উত্তর দেননি"}</span></p>
+                          {!result.isCorrect && question.options[question.correctAnswerIndex] !== undefined && (
                             <p>সঠিক উত্তর: <span className="text-tertiary font-medium">{question.options[question.correctAnswerIndex]}</span></p>
                           )}
                         </div>
@@ -619,15 +648,7 @@ export default function Exam() {
               </div>
             </div>
             <div className="flex justify-start gap-6 pb-12 px-8">
-              <button 
-                type="button"
-                onClick={() => setConfirmStep(0)}
-                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
-              >
-                বাতিল করুন
-                <GiCancel />
-              </button>
+              
               <button 
                 type="button"
                 onClick={() => setConfirmStep(2)}
@@ -636,6 +657,15 @@ export default function Exam() {
               >
                 নিশ্চিত করুন
                 <MdDoneOutline />
+              </button>
+              <button 
+                type="button"
+                onClick={() => setConfirmStep(0)}
+                className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+              >
+                বাতিল করুন
+                <GiCancel />
               </button>
             </div>
           </div>
@@ -657,7 +687,7 @@ export default function Exam() {
                 type="button"
                 onClick={() => setConfirmStep(0)}
                 className="h-16 flex justify-center items-center gap-2 text-black px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
-                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
               >
                 বাতিল করুন
                 <GiCancel />

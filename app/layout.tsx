@@ -19,14 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${publicSans.variable} h-full`} style={{ height: "100dvh" }}>
+    <html lang="en" className={publicSans.variable}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="h-full flex flex-col font-body-md text-on-background bg-background">
+      <body className="flex flex-col font-body-md text-on-background bg-background">
         {children}
       </body>
     </html>
