@@ -385,10 +385,10 @@ export default function Exam() {
         </div>
       </aside>
       <div className="flex flex-col ml-0 md:ml-20">
-        <div className="w-full h-[16px] bg-surface-container-highest flex-shrink-0">
+        <div className="sticky top-0 z-10 w-full h-[16px] bg-surface-container-highest">
           <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete || showReviewBeforeSubmit ? 100 : progress}%` }}></div>
         </div>
-        <header className="flex-shrink-0 border-b border-slate-100 shadow-sm" style={{ backgroundColor: '#075E54' }}>
+        <header className="sticky top-0 z-20 border-b border-slate-100 shadow-sm" style={{ backgroundColor: '#075E54' }}>
           <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto max-sm:px-2 max-sm:py-2">
             <button onClick={handleStartOver} aria-label="Start Over" className="text-white hover:bg-[#1eb856] transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-white max-sm:p-1">
               <span className="material-symbols-outlined text-3xl max-sm:text-xl">refresh</span>
