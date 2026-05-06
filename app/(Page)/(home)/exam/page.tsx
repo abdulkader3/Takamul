@@ -451,7 +451,7 @@ export default function Exam() {
               </section>
             </div>
 
-            <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-white border-t border-gray-200">
+            <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-transparent border-t border-gray-200">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
