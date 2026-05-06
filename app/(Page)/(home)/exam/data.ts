@@ -91,7 +91,7 @@ export const questions = [
   {
     id: 8,
     type: "image_mcq",
-    imagePath: "/Q_photos/Wheel-Chocks-1.jpg",
+    imagePath: "/Q_photos/Wheel-Chocks-1.png",
     imageAlt: "থামানো ট্রাকের পেছনে চাকা আটকা���োর ব্লক",
     question: "ছবিতে কী দেখানো হয়েছে?",
     options: [
