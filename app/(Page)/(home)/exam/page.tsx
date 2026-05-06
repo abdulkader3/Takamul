@@ -428,13 +428,13 @@ export default function Exam() {
           </div>
 ) : (
            <>
-              <div className="max-w-3xl mx-auto w-full flex flex-col pb-24">
+              <div className="max-w-4xl mx-auto w-full flex flex-col pb-24  ">
                 {currentQuestion.type === "image_mcq" && currentQuestion.imagePath && (
                   <section className="mb-4 flex-shrink-0 flex justify-center">
                     <img 
                       src={currentQuestion.imagePath} 
                       alt={currentQuestion.imageAlt || currentQuestion.question}
-                      className="max-w-full max-h-48 md:max-h-64 object-contain rounded-lg shadow-md"
+                      className="w-full object-contain rounded-lg shadow-2xl"
                     />
                   </section>
                 )}
@@ -492,7 +492,7 @@ export default function Exam() {
                 </section>
               </div>
 
-            <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-transparent border-t border-gray-200">
+            <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-transparent">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
