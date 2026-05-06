@@ -13,6 +13,7 @@ interface Result {
 
 export default function Exam() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmStep, setConfirmStep] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [results, setResults] = useState<Result[]>([]);
@@ -210,6 +211,7 @@ export default function Exam() {
   };
 
   const handleFinalSubmit = () => {
+    console.log("handleFinalSubmit called, confirmStep:", confirmStep);
     const newResult: Result = {
       questionId: currentQuestion.id,
       selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
@@ -217,13 +219,19 @@ export default function Exam() {
     };
     const newResults = [...results];
     newResults[currentQuestionIndex] = newResult;
+    
+    // First close the modal by resetting confirmStep
+    setConfirmStep(0);
     setResults(newResults);
     
-    const endTime = Date.now();
-    setExamEndTime(endTime);
-    setTimerStarted(false);
-    setIsExamComplete(true);
-    saveToLocalStorage(newResults, currentQuestionIndex, true);
+    // Then complete the exam
+    setTimeout(() => {
+      const endTime = Date.now();
+      setExamEndTime(endTime);
+      setTimerStarted(false);
+      setIsExamComplete(true);
+      saveToLocalStorage(newResults, currentQuestionIndex, true);
+    }, 100);
   };
 
   const handlePrevious = () => {
@@ -335,9 +343,9 @@ export default function Exam() {
 
   return (
     <div className="h-full flex flex-col">
-      <aside className="fixed left-0 top-16 bottom-0 w-16 hidden md:flex flex-col items-center py-4 bg-surface-container-lowest shadow-lg z-10">
-        <div className="text-xs font-medium text-on-surface-variant mb-3">Questions</div>
-        <div className="flex flex-col gap-2 w-full px-2 overflow-y-auto max-h-full">
+      <aside className="fixed left-0 top-16 bottom-0 w-20 hidden md:flex flex-col items-center py-4 bg-surface-container-lowest shadow-lg z-10">
+        <div className="text-sm font-semibold text-on-surface-variant mb-4">Questions</div>
+        <div className="flex flex-col gap-2 w-full px-3 h-full">
           {Array.from({ length: totalQuestions }, (_, i) => {
             const questionResult = results[i];
             const isAnswered = questionResult && questionResult.selectedAnswerIndex >= 0;
@@ -346,7 +354,7 @@ export default function Exam() {
               <button
                 key={i}
                 onClick={() => handleQuestionNavClick(i)}
-                className={`w-full h-9 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
+                className={`w-full flex-1 rounded-xl text-lg font-semibold transition-all flex items-center justify-center ${
                   isCurrent 
                     ? 'bg-tertiary text-white shadow-md' 
                     : isAnswered 
@@ -355,7 +363,7 @@ export default function Exam() {
                 }`}
               >
                 {isAnswered && !isCurrent ? (
-                  <span className="material-symbols-outlined text-lg">check</span>
+                  <span className="material-symbols-outlined text-2xl">check</span>
                 ) : (
                   i + 1
                 )}
@@ -364,63 +372,60 @@ export default function Exam() {
           })}
         </div>
       </aside>
-      <div className="flex-1 flex flex-col ml-0 md:ml-16">
+      <div className="flex-1 flex flex-col ml-0 md:ml-20">
         <div className="w-full h-[16px] bg-surface-container-highest flex-shrink-0">
           <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
         </div>
-        <header className="flex-shrink-0 border-b border-slate-100 shadow-sm bg-white">
+        <header className="flex-shrink-0 border-b border-slate-100 shadow-sm" style={{ backgroundColor: '#075E54' }}>
           <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto max-sm:px-2 max-sm:py-2">
-            <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed max-sm:p-1">
+            <button onClick={handleStartOver} aria-label="Start Over" className="text-white hover:bg-[#1eb856] transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-white max-sm:p-1">
               <span className="material-symbols-outlined text-3xl max-sm:text-xl">refresh</span>
             </button>
-            <div className={`font-bold text-xl tracking-tight max-sm:text-base ${timeLeft < 60 ? 'text-error' : 'text-tertiary-container'}`}>
+            <div className={`font-bold text-xl tracking-tight max-sm:text-base ${timeLeft < 60 ? 'text-error' : 'text-white'}`}>
               {formatTime(timeLeft)}
             </div>
             <div className="flex items-center gap-2 max-sm:gap-1">
               {isLastQuestion ? (
                 <button 
-                  onClick={handleFinalSubmit}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#002915'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#00ba28'}
-                  className="h-9 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md active:scale-[0.98] transition-all mt-10 max-sm:mt-0 max-sm:h-8 max-sm:px-2 max-sm:text-xs"
-                  style={{ backgroundColor: '#00ba28', color: '#ffffff' }}
+                  onClick={() => setConfirmStep(1)}
+                  className="h-16 px-8 font-button text-xl rounded-2xl flex items-center justify-center shadow-md active:scale-[0.98] transition-all mt-10 max-sm:mt-0 max-sm:h-12 max-sm:px-4 max-sm:text-lg"
+                  style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
                 >
-                  <span className="material-symbols-outlined text-lg max-sm:text-base">send</span>
-                  <span className="max-sm:hidden">সমাপ্তি করুন</span>
+                  সমাপ্তি করুন
                 </button>
               ) : (
-                <h1 className="text-tertiary-container font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+                <h1 className="text-white font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
               {isLastQuestion && (
-                <h1 className="text-tertiary-container font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
+                <h1 className="text-white font-bold text-xl tracking-tight max-sm:text-sm">Question {currentQuestionIndex + 1} of {totalQuestions}</h1>
               )}
             </div>
           </div>
         </header>
-      <main className="w-full mx-auto px-6 py-4 flex overflow-hidden max-sm:px-3 max-sm:py-3">
+      <main className="w-full mx-auto px-6 py-4 flex overflow-hidden max-sm:px-3 max-sm:py-3 h-full">
         <div className="flex-1 flex flex-col overflow-hidden">
         {isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
+            {/* <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
               <span className="material-symbols-outlined text-6xl">check_circle</span>
-            </div>
-            <h2 className="text-2xl font-bold text-tertiary mb-4">পরীক্ষা সম্পন্ন!</h2>
-            <p className="text-lg text-on-surface-variant mb-8">আপনি সফলভাবে পরীক্ষা শেষ করেছেন</p>
+            </div> */}
+            <h2 className="text-8xl font-bold text-black mb-4">আপনার পরীক্ষা সম্পন্ন হয়েছে</h2>
+            <p className="text-9xl text-[#005832] mb-8">ধন্যবাদ</p>
             
           </div>
 ) : (
           <>
-            <div className="max-w-2xl mx-auto w-full flex flex-col">
-              <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-3">
-                <h2 className="text-3xl font-bold max-w-6xl max-sm:text-lg">
+            <div className="max-w-3xl mx-auto w-full flex flex-col h-full">
+              <section className="mb-8 text-center md:text-left flex-shrink-0 max-sm:mb-6 mt-10">
+                <h2 className="text-6xl font-semibold max-w-6xl max-sm:text-4xl">
                   {currentQuestion.question}
                 </h2>
               </section>
-              <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 sm:gap-3" role="radiogroup">
+              <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-5 sm:gap-6" role="radiogroup">
                 {currentQuestion.options.map((option, index) => (
                   <label 
                     key={index} 
-                    className={`group relative flex items-center p-2 sm:p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                    className={`group relative flex items-center p-5 sm:p-6 bg-surface-container-lowest border-2 border-outline-variant rounded-2xl cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
                     style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
                   >
                     <input 
@@ -431,15 +436,15 @@ export default function Exam() {
                       checked={selectedAnswer === index}
                       onChange={() => handleOptionChange(index)}
                     />
-                    <div className="flex items-center gap-2 sm:gap-3 w-full">
+                    <div className="flex items-center gap-5 sm:gap-6 w-full">
                       <div 
-                        className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors`}
+                        className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors text-4xl font-black"
                         style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
                       >
                         {optionLabels[index]}
                       </div>
                       <div className="flex items-center gap-2 flex-1">
-                        <span className={`font-body-md sm:font-body-lg text-sm sm:text-body-lg text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
+                        <span className={`font-body-md sm:font-body-lg text-2xl sm:text-3xl text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
                       </div>
                     </div>
                   </label>
@@ -448,18 +453,18 @@ export default function Exam() {
             </div>
 
             {!isLastQuestion && (
-            <section className="mt-8 pt-2 flex-shrink-0 flex justify-end gap-2">
+            <section className=" items-end pt-4 flex-shrink-0 flex justify-end gap-3 mr-20 mb-10">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
-                className={`h-10 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
+                className={`h-16 px-6 font-button text-xl rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
               >
-                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                <span className="material-symbols-outlined text-2xl">arrow_back</span>
                 পিছিয়ে যান
               </button>
-              <button onClick={handleNext} className="h-10 px-6 bg-tertiary text-on-tertiary font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-tertiary-fixed">
+              <button onClick={handleNext} className="h-16 px-8 bg-tertiary text-on-tertiary font-button text-xl rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-tertiary-fixed">
                 এগিয়ে যান
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                <span className="material-symbols-outlined text-2xl">arrow_forward</span>
               </button>
             </section>
             )}
@@ -478,8 +483,8 @@ export default function Exam() {
             )}
 
             <div className="md:hidden mt-4 pt-2 flex-shrink-0">
-              <div className="text-xs font-medium text-on-surface-variant mb-2 text-center">Questions</div>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="text-xl font-medium text-on-surface-variant mb-2 text-center">Questions</div>
+              <div className="flex flex-wrap justify-center gap-8">
                 {Array.from({ length: totalQuestions }, (_, i) => {
                   const questionResult = results[i];
                   const isAnswered = questionResult && questionResult.selectedAnswerIndex >= 0;
@@ -488,7 +493,7 @@ export default function Exam() {
                     <button
                       key={i}
                       onClick={() => handleQuestionNavClick(i)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
+                      className={`w-14 h-14 rounded-lg text-xl font-medium transition-all flex items-center justify-center ${
                         isCurrent 
                           ? 'bg-tertiary text-white shadow-md' 
                           : isAnswered 
@@ -600,6 +605,73 @@ export default function Exam() {
                 );
               })
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmStep === 1 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white"></div>
+          <div className="relative w-full h-full flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <h1 className="font-bold text-4xl text-[#DC2626] mb-4">নিশ্চিত?</h1>
+                <p className="text-xl text-gray-600">আপনি কি পরীক্ষা শেষ করতে চান?</p>
+              </div>
+            </div>
+            <div className="flex justify-start gap-6 pb-12 px-8">
+              <button 
+                type="button"
+                onClick={() => setConfirmStep(0)}
+                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+              >
+                বাতিল করুন
+              </button>
+              <button 
+                type="button"
+                onClick={() => setConfirmStep(2)}
+                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
+              >
+                নিশ্চিত করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmStep === 2 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white"></div>
+          <div className="relative w-full h-full flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <h1 className="font-bold text-4xl text-[#DC2626] mb-4">নিশ্চিত?</h1>
+                <p className="text-xl text-gray-600">আপনি কি পরীক্ষা শেষ করতে চান?</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-6 pb-12 px-8">
+              <button 
+                type="button"
+                onClick={() => setConfirmStep(0)}
+                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#25D366', color: '#ffffff' }}
+              >
+                বাতিল করুন
+              </button>
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleFinalSubmit();
+                }}
+                className="h-16 px-12 font-button text-xl rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+                style={{ backgroundColor: '#DC2626', color: '#ffffff' }}
+              >
+                নিশ্চিত করুন
+              </button>
             </div>
           </div>
         </div>
