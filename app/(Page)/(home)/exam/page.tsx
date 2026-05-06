@@ -318,12 +318,57 @@ export default function Exam() {
     );
   }
 
+  const handleQuestionNavClick = (index: number) => {
+    const newResult: Result = {
+      questionId: currentQuestion.id,
+      selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
+      isCorrect: selectedAnswer === currentQuestion.correctAnswerIndex
+    };
+    const newResults = [...results];
+    newResults[currentQuestionIndex] = newResult;
+    setResults(newResults);
+    setCurrentQuestionIndex(index);
+    const targetResult = newResults[index];
+    setSelectedAnswer(targetResult && targetResult.selectedAnswerIndex >= 0 ? targetResult.selectedAnswerIndex : null);
+    saveToLocalStorage(newResults, index, false);
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="w-full h-[16px] bg-surface-container-highest flex-shrink-0">
-        <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
-      </div>
-      <header className="flex-shrink-0 border-b border-slate-100 shadow-sm bg-white">
+      <aside className="fixed left-0 top-16 bottom-0 w-16 hidden md:flex flex-col items-center py-4 bg-surface-container-lowest shadow-lg z-10">
+        <div className="text-xs font-medium text-on-surface-variant mb-3">Questions</div>
+        <div className="flex flex-col gap-2 w-full px-2 overflow-y-auto max-h-full">
+          {Array.from({ length: totalQuestions }, (_, i) => {
+            const questionResult = results[i];
+            const isAnswered = questionResult && questionResult.selectedAnswerIndex >= 0;
+            const isCurrent = i === currentQuestionIndex;
+            return (
+              <button
+                key={i}
+                onClick={() => handleQuestionNavClick(i)}
+                className={`w-full h-9 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
+                  isCurrent 
+                    ? 'bg-tertiary text-white shadow-md' 
+                    : isAnswered 
+                      ? 'bg-green-100 text-green-700 border border-green-300'
+                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
+                }`}
+              >
+                {isAnswered && !isCurrent ? (
+                  <span className="material-symbols-outlined text-lg">check</span>
+                ) : (
+                  i + 1
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+      <div className="flex-1 flex flex-col ml-0 md:ml-16">
+        <div className="w-full h-[16px] bg-surface-container-highest flex-shrink-0">
+          <div className="h-full bg-on-tertiary-container transition-all duration-500 ease-in-out" style={{ width: `${isExamComplete ? 100 : progress}%` }}></div>
+        </div>
+        <header className="flex-shrink-0 border-b border-slate-100 shadow-sm bg-white">
           <div className="flex justify-between items-center w-full px-4 py-3 max-w-[1024px] mx-auto max-sm:px-2 max-sm:py-2">
             <button onClick={handleStartOver} aria-label="Start Over" className="text-tertiary-container hover:bg-slate-50 transition-colors active:scale-95 duration-150 p-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-tertiary-fixed max-sm:p-1">
               <span className="material-symbols-outlined text-3xl max-sm:text-xl">refresh</span>
@@ -352,7 +397,8 @@ export default function Exam() {
             </div>
           </div>
         </header>
-      <main className="flex-1 w-full max-w-container-max mx-auto px-6 py-4 flex flex-col overflow-hidden max-sm:px-3 max-sm:py-3">
+      <main className="w-full mx-auto px-6 py-4 flex overflow-hidden max-sm:px-3 max-sm:py-3">
+        <div className="flex-1 flex flex-col overflow-hidden">
         {isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <div className="bg-tertiary-fixed w-32 h-32 rounded-full flex items-center justify-center text-on-tertiary-fixed shadow-sm mb-6">
@@ -362,45 +408,47 @@ export default function Exam() {
             <p className="text-lg text-on-surface-variant mb-8">আপনি সফলভাবে পরীক্ষা শেষ করেছেন</p>
             
           </div>
-        ) : (
+) : (
           <>
-            <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-3">
-              <h2 className="text-3xl font-bold max-w-6xl max-sm:text-lg">
-                {currentQuestion.question}
-              </h2>
-            </section>
-            <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 sm:gap-3" role="radiogroup">
-              {currentQuestion.options.map((option, index) => (
-                <label 
-                  key={index} 
-                  className={`group relative flex items-center p-2 sm:p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
-                  style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
-                >
-                  <input 
-                    className="peer sr-only" 
-                    name="answer" 
-                    type="radio" 
-                    value={index}
-                    checked={selectedAnswer === index}
-                    onChange={() => handleOptionChange(index)}
-                  />
-                  <div className="flex items-center gap-2 sm:gap-3 w-full">
-                    <div 
-                      className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors`}
-                      style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
-                    >
-                      {optionLabels[index]}
+            <div className="max-w-2xl mx-auto w-full flex flex-col">
+              <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-3">
+                <h2 className="text-3xl font-bold max-w-6xl max-sm:text-lg">
+                  {currentQuestion.question}
+                </h2>
+              </section>
+              <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 sm:gap-3" role="radiogroup">
+                {currentQuestion.options.map((option, index) => (
+                  <label 
+                    key={index} 
+                    className={`group relative flex items-center p-2 sm:p-3 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                    style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
+                  >
+                    <input 
+                      className="peer sr-only" 
+                      name="answer" 
+                      type="radio" 
+                      value={index}
+                      checked={selectedAnswer === index}
+                      onChange={() => handleOptionChange(index)}
+                    />
+                    <div className="flex items-center gap-2 sm:gap-3 w-full">
+                      <div 
+                        className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors`}
+                        style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
+                      >
+                        {optionLabels[index]}
+                      </div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className={`font-body-md sm:font-body-lg text-sm sm:text-body-lg text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      <span className={`font-body-md sm:font-body-lg text-sm sm:text-body-lg text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
-                    </div>
-                  </div>
-                </label>
-              ))}
-</section>
+                  </label>
+                ))}
+              </section>
+            </div>
 
             {!isLastQuestion && (
-            <section className="mt-4 pt-2 flex-shrink-0 flex justify-end gap-2">
+            <section className="mt-8 pt-2 flex-shrink-0 flex justify-end gap-2">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
@@ -417,7 +465,7 @@ export default function Exam() {
             )}
 
             {isLastQuestion && (
-            <section className="mt-4 pt-2 flex-shrink-0 flex justify-end">
+            <section className="mt-8 pt-2 flex-shrink-0 flex justify-end">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
@@ -429,10 +477,42 @@ export default function Exam() {
             </section>
             )}
 
+            <div className="md:hidden mt-4 pt-2 flex-shrink-0">
+              <div className="text-xs font-medium text-on-surface-variant mb-2 text-center">Questions</div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {Array.from({ length: totalQuestions }, (_, i) => {
+                  const questionResult = results[i];
+                  const isAnswered = questionResult && questionResult.selectedAnswerIndex >= 0;
+                  const isCurrent = i === currentQuestionIndex;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleQuestionNavClick(i)}
+                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
+                        isCurrent 
+                          ? 'bg-tertiary text-white shadow-md' 
+                          : isAnswered 
+                            ? 'bg-green-100 text-green-700 border border-green-300'
+                            : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
+                      }`}
+                    >
+                      {isAnswered && !isCurrent ? (
+                        <span className="material-symbols-outlined text-lg">check</span>
+                      ) : (
+                        i + 1
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
 
           </>
         )}
+        </div>
       </main>
+      </div>
 
       {showTimeUpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
