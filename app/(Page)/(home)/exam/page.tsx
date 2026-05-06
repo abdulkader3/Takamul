@@ -211,7 +211,6 @@ export default function Exam() {
   };
 
   const handleFinalSubmit = () => {
-    console.log("handleFinalSubmit called, confirmStep:", confirmStep);
     const newResult: Result = {
       questionId: currentQuestion.id,
       selectedAnswerIndex: selectedAnswer !== null ? selectedAnswer : -1,
@@ -402,7 +401,7 @@ export default function Exam() {
             </div>
           </div>
         </header>
-      <main className="w-full mx-auto px-6 py-4 flex overflow-hidden max-sm:px-3 max-sm:py-3 h-full">
+      <main className="w-full mx-auto px-6 py-4 flex overflow-auto max-sm:px-3 max-sm:py-3 h-full">
         <div className="flex-1 flex flex-col overflow-hidden">
         {isExamComplete ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -415,17 +414,17 @@ export default function Exam() {
           </div>
 ) : (
           <>
-            <div className="max-w-3xl mx-auto w-full flex flex-col h-full">
-              <section className="mb-8 text-center md:text-left flex-shrink-0 max-sm:mb-6 mt-10">
-                <h2 className="text-6xl font-semibold max-w-6xl max-sm:text-4xl">
+            <div className="max-w-3xl mx-auto w-full flex flex-col min-h-0 pb-24">
+              <section className="mb-4 text-center md:text-left flex-shrink-0 max-sm:mb-2">
+                <h2 className="text-xl md:text-2xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-semibold">
                   {currentQuestion.question}
                 </h2>
               </section>
-              <section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-5 sm:gap-6" role="radiogroup">
+<section aria-label="Multiple choice options" className="flex-1 flex flex-col gap-2 md:gap-3 lg:gap-3" role="radiogroup">
                 {currentQuestion.options.map((option, index) => (
                   <label 
                     key={index} 
-                    className={`group relative flex items-center p-5 sm:p-6 bg-surface-container-lowest border-2 border-outline-variant rounded-2xl cursor-pointer transition-all duration-200 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04)] ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
+                    className={`group relative flex items-center p-2 md:p-3 lg:p-3 xl:p-4 2xl:p-5 bg-surface-container-lowest border-2 border-outline-variant rounded-lg cursor-pointer transition-all duration-200 shadow-sm ${selectedAnswer === index ? '' : 'hover:bg-[#f5f5f5]'}`}
                     style={selectedAnswer === index ? { backgroundColor: '#fbbf24', borderColor: '#d97706', borderWidth: '4px' } : {}}
                   >
                     <input 
@@ -436,15 +435,15 @@ export default function Exam() {
                       checked={selectedAnswer === index}
                       onChange={() => handleOptionChange(index)}
                     />
-                    <div className="flex items-center gap-5 sm:gap-6 w-full">
+                    <div className="flex items-center gap-2 md:gap-3 lg:gap-3 xl:gap-4 w-full">
                       <div 
-                        className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-surface-container flex items-center justify-center font-headline-sm sm:font-headline-md text-on-surface-variant transition-colors text-4xl font-black"
+                        className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 xl:w-12 xl:h-12 2xl:w-14 2xl:h-14 rounded-full bg-surface-container flex items-center justify-center text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl font-medium text-on-surface-variant transition-colors"
                         style={selectedAnswer === index ? { backgroundColor: '#fde68a', color: '#78350f' } : {}}
                       >
                         {optionLabels[index]}
                       </div>
                       <div className="flex items-center gap-2 flex-1">
-                        <span className={`font-body-md sm:font-body-lg text-2xl sm:text-3xl text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
+                        <span className={`text-sm md:text-base lg:text-base xl:text-lg 2xl:text-xl text-on-background ${selectedAnswer === index ? 'font-semibold' : ''}`}>{option}</span>
                       </div>
                     </div>
                   </label>
@@ -452,35 +451,32 @@ export default function Exam() {
               </section>
             </div>
 
-            {!isLastQuestion && (
-            <section className=" items-end pt-4 flex-shrink-0 flex justify-end gap-3 mr-20 mb-10">
+            <section className="fixed bottom-0 left-0 right-0 z-40 p-3 md:p-4 flex items-center justify-end mr-20 gap-3 md:gap-4 bg-white border-t border-gray-200">
               <button 
                 onClick={handlePrevious} 
                 disabled={currentQuestionIndex === 0}
-                className={`h-16 px-6 font-button text-xl rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
+                className={`h-12 md:h-14 px-4 md:px-6 font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all ${currentQuestionIndex === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-[0.98]'}`}
               >
-                <span className="material-symbols-outlined text-2xl">arrow_back</span>
-                পিছিয়ে যান
+                <span className="material-symbols-outlined text-lg md:text-xl">arrow_back</span>
+                <span className="hidden md:inline">পিছিয়ে যান</span>
               </button>
-              <button onClick={handleNext} className="h-16 px-8 bg-tertiary text-on-tertiary font-button text-xl rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-tertiary-fixed">
-                এগিয়ে যান
-                <span className="material-symbols-outlined text-2xl">arrow_forward</span>
-              </button>
+              
+              {!isLastQuestion ? (
+                <button onClick={handleNext} className="h-12 md:h-14 px-6 md:px-8 text-white font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]" style={{ backgroundColor: '#25D366' }}>
+                  <span className="hidden md:inline">এগিয়ে যান</span>
+                  <span className="md:hidden">Next</span>
+                  <span className="material-symbols-outlined text-lg md:text-xl">arrow_forward</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setConfirmStep(1)}
+                  className="h-12 md:h-14 px-6 md:px-8 text-white font-medium text-sm md:text-base rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+                  style={{ backgroundColor: '#DC2626' }}
+                >
+                  সমাপ্তি করুন
+                </button>
+              )}
             </section>
-            )}
-
-            {isLastQuestion && (
-            <section className="mt-8 pt-2 flex-shrink-0 flex justify-end">
-              <button 
-                onClick={handlePrevious} 
-                disabled={currentQuestionIndex === 0}
-                className={`h-10 px-4 font-button text-sm rounded-lg flex items-center justify-center gap-1 shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-tertiary-fixed ${currentQuestionIndex === 0 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container hover:bg-surface-container-high active:scale-[0.98]'}`}
-              >
-                <span className="material-symbols-outlined text-lg">arrow_back</span>
-                পিছিয়ে যান
-              </button>
-            </section>
-            )}
 
             <div className="md:hidden mt-4 pt-2 flex-shrink-0">
               <div className="text-xl font-medium text-on-surface-variant mb-2 text-center">Questions</div>
